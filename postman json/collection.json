@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "My API",
+    "_postman_id": "c6d8e0a1-2222-4444-bbbb-123456789111",
+    "description": "Automated API flow for card info and transfer operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Card Info",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"method\": \"card.info\", \"params\": {\"card_number\": \"{{card_number}}\"}, \"id\": 1, \"jsonrpc\": \"2.0\"}"
+        },
+        "url": { "raw": "{{base_url}}", "host": ["{{base_url}}"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Transfer Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"method\": \"transfer.create\", \"params\": {\"sender_card_number\": \"{{card_number}}\", \"receiver_card_number\": \"8600432112345678\", \"amount\": 10000}, \"id\": 1, \"jsonrpc\": \"2.0\"}"
+        },
+        "url": { "raw": "{{base_url}}", "host": ["{{base_url}}"] }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var json = pm.response.json();",
+              "if(json.result && json.result.transfer_id) {",
+              "    pm.environment.set(\"transfer_id\", json.result.transfer_id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transfer Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"method\": \"transfer.confirm\", \"params\": {\"transfer_id\": \"{{transfer_id}}\"}, \"id\": 1, \"jsonrpc\": \"2.0\"}"
+        },
+        "url": { "raw": "{{base_url}}", "host": ["{{base_url}}"] }
+      },
+      "response": []
+    },
+    {
+      "name": "Transfer Cancel",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"method\": \"transfer.cancel\", \"params\": {\"transfer_id\": \"{{transfer_id}}\"}, \"id\": 1, \"jsonrpc\": \"2.0\"}"
+        },
+        "url": { "raw": "{{base_url}}", "host": ["{{base_url}}"] }
+      },
+      "response": []
+    }
+  ]
+}

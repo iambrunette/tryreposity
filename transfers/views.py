@@ -1,10 +1,11 @@
 import random
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from jsonrpcserver import method, dispatch, Success, Result
+from jsonrpcserver import method, dispatch
 from .models import Transfer, Card
 from django.utils.timezone import now
 from datetime import datetime
+from django.core.cache import cache
 
 
 # ======= Вспомогательные функции =======
@@ -175,6 +176,30 @@ def transfer_history(card_number=None, start_date=None, end_date=None, status=No
 
     return list(qs.values("ext_id", "sending_amount", "state", "created_at"))
 
+@method
+def card_info(card_number, expiry):
+    cache_key = f"card_info:{card_number}:{expiry}"
+    data = cache.get(cache_key)
+    
+    if data:
+        return data  
+
+    try:
+        card = Card.objects.get(card_number=card_number, expiry_date=expiry)
+        masked = f"{card.card_number[:6]}******{card.card_number[-4:]}"
+        data = {
+            "card_status": card.status,
+            "balance": card.balance,
+            "phone": card.phone,
+            "masked_card": masked
+        }
+    except Card.DoesNotExist:
+        data = {"error": "Card not found"}
+    except TimeoutError:
+        data = {"error": "Request timed out"}
+
+    cache.set(cache_key, data, 30) 
+    return data
 
 @csrf_exempt
 def jsonrpc_view(request: HttpRequest) -> HttpResponse:
